@@ -27,12 +27,12 @@ const flexspi_nor_config_t qspiflash_config = {
         {
             .tag              = FLEXSPI_CFG_BLK_TAG,
             .version          = FLEXSPI_CFG_BLK_VERSION,
-            .readSampleClkSrc = kFlexSPIReadSampleClk_LoopbackFromDqsPad,
+            .readSampleClkSrc = kFlexSPIReadSampleClk_LoopbackInternally,  //kFlexSPIReadSampleClk_LoopbackFromDqsPad
             .csHoldTime       = 3u,
             .csSetupTime      = 3u,
             // Enable DDR mode, Wordaddassable, Safe configuration, Differential clock
             .sflashPadType = kSerialFlash_4Pads,
-            .serialClkFreq = kFlexSpiSerialClk_100MHz,
+            .serialClkFreq = kFlexSpiSerialClk_133MHz,
             .sflashA1Size  = 8u * 1024u * 1024u,
             .lookupTable =
                 {
