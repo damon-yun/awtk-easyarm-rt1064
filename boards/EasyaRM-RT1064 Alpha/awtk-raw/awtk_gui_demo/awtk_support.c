@@ -5,10 +5,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "GUI.h"
-#include "WM.h"
 #include "awtk_support.h"
-#include "GUIDRV_Lin.h"
 
 #include "fsl_debug_console.h"
 #include "fsl_elcdif.h"
@@ -90,7 +87,6 @@ void APP_LCDIF_IRQHandler(void)
         if (s_LCDpendingBuffer >= 0)
         {
             /* Send a confirmation that the given buffer is visible */
-            GUI_MULTIBUF_Confirm(s_LCDpendingBuffer);
             s_LCDpendingBuffer = -1;
         }
     }
@@ -191,137 +187,4 @@ int BOARD_Touch_Poll(int *pX, int *pY, int *pPressFlg)
         return 1;
     }
     return 0;
-}
-
-/*******************************************************************************
- * Application implemented functions required by emWin library
- ******************************************************************************/
-void LCD_X_Config(void)
-{
-    GUI_MULTIBUF_Config(GUI_BUFFERS);
-    GUI_DEVICE_CreateAndLink(DISPLAY_DRIVER, COLOR_CONVERSION, 0, 0);
-    LCD_SetSizeEx(0, LCD_WIDTH, LCD_HEIGHT);
-    LCD_SetVSizeEx(0, LCD_WIDTH, LCD_HEIGHT);
-    LCD_SetVRAMAddrEx(0, (void *)VRAM_ADDR);
-#if (LCD_BITS_PER_PIXEL == 8)
-    LCD_SetLUT(&_aPalette_256);
-#endif
-    BOARD_Touch_Init();
-}
-
-int LCD_X_DisplayDriver(unsigned LayerIndex, unsigned Cmd, void *p)
-{
-    uint32_t addr;
-#if (LCD_BITS_PER_PIXEL == 8)
-    uint16_t colorR, colorG, colorB;
-    uint32_t color;
-#endif
-    int result = 0;
-    LCD_X_SHOWBUFFER_INFO *pData;
-    switch (Cmd)
-    {
-        case LCD_X_INITCONTROLLER:
-        {
-            APP_ELCDIF_Init();
-            break;
-        }
-        case LCD_X_SHOWBUFFER:
-        {
-            pData = (LCD_X_SHOWBUFFER_INFO *)p;
-            /* Calculate address of the given buffer */
-            addr = VRAM_ADDR + VRAM_SIZE * pData->Index;
-            /* Make the given buffer visible */
-            ELCDIF_SetNextBufferAddr(APP_ELCDIF, addr);
-            //
-            // Remember buffer index to be used by ISR
-            //
-            s_LCDpendingBuffer = pData->Index;
-            while (s_LCDpendingBuffer >= 0)
-                ;
-            return 0;
-        }
-#if (LCD_BITS_PER_PIXEL == 8)
-        case LCD_X_SETLUTENTRY:
-        {
-            //
-            // Required for setting a lookup table entry which is passed in the 'Pos' and 'Color' element of p
-            //
-            LCD_X_SETLUTENTRY_INFO *pData;
-            pData = (LCD_X_SETLUTENTRY_INFO *)p;
-            //
-            // Call hardware routine to write a LUT entry to the controller
-            //
-            color  = pData->Color;
-            colorB = (color & 0xFF0000) >> 16;
-            colorG = (color & 0x00FF00) >> 8;
-            colorR = (color & 0x0000FF);
-            /* 16-bit bus */
-            lutData[pData->Pos] = ((colorR >> 3) << 11) | ((colorG >> 2) << 5) | ((colorB >> 3) << 0);
-            return 0;
-        }
-#endif
-        default:
-            result = -1;
-            break;
-    }
-
-    return result;
-}
-
-void GUI_X_Config(void)
-{
-    /* Assign work memory area to emWin */
-    GUI_ALLOC_AssignMemory((void *)GUI_MEMORY_ADDR, GUI_NUMBYTES);
-
-    /* Select default font */
-    GUI_SetDefaultFont(GUI_FONT_6X8);
-}
-
-void GUI_X_Init(void)
-{
-}
-
-/* Dummy RTOS stub required by emWin */
-void GUI_X_InitOS(void)
-{
-}
-
-/* Dummy RTOS stub required by emWin */
-void GUI_X_Lock(void)
-{
-}
-
-/* Dummy RTOS stub required by emWin */
-void GUI_X_Unlock(void)
-{
-}
-
-/* Dummy RTOS stub required by emWin */
-U32 GUI_X_GetTaskId(void)
-{
-    return 0;
-}
-
-void GUI_X_ExecIdle(void)
-{
-}
-
-GUI_TIMER_TIME GUI_X_GetTime(void)
-{
-    return 0;
-}
-
-void GUI_X_Delay(int Period)
-{
-    volatile int i;
-    for (; Period > 0; Period--)
-    {
-        for (i = 15000; i > 0; i--)
-            ;
-    }
-}
-
-void *emWin_memcpy(void *pDst, const void *pSrc, long size)
-{
-    return memcpy(pDst, pSrc, size);
 }

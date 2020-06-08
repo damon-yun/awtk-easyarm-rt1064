@@ -36,14 +36,6 @@
 #include "board.h"
 #include "awtk_support.h"
 
-#include "GUI.h"
-#include "BUTTON.h"
-#include "CHECKBOX.h"
-#include "SLIDER.h"
-#include "DROPDOWN.h"
-#include "RADIO.h"
-#include "MULTIPAGE.h"
-
 #include "pin_mux.h"
 #include "fsl_gpio.h"
 #include "clock_config.h"
